@@ -1,0 +1,53 @@
+package main;
+
+import energy.Consumo;
+import energy.RedEnergetica;
+import java.util.List;
+import concurrency.ProcesarConsumo; // Sesión 1
+import concurrency.OperadorRed; // Versión 3
+import java.util.ArrayList;
+
+public class MySmartGrid {
+	
+    public static void main(String[] args) {
+        RedEnergetica red = new RedEnergetica(
+                Config.NUM_ZONAS,
+                Config.CAPACIDAD_BATERIA,
+                Config.NIVEL_INICIAL_BATERIA
+        );
+        
+        List<Consumo> consumos = Consumo.consumosDesdeFichero(Config.FICHERO_CONSUMOS);
+        System.out.println("Leidos " + consumos.size() + " consumos desde " + Config.FICHERO_CONSUMOS);
+      
+        // Tramitamos los consumos de manera secuencial
+//        String resultado;
+//        for (Consumo c:consumos) {
+//        	resultado = red.getZona(c.getZona()).tramitarConsumo(c);
+//            red.getZona(c.getZona()).getVentana().traza (c.getIdConsumo()+ " - Tramitado: "+resultado);
+//        }
+//        red.imprimeAuditoria();
+        
+
+        // ---- VERSIÓN 1: Implementar concurrencia ----
+        // para cada elemento de la lista, se lanza un hilo por consumo que llama a tramitar consumo de su zona
+        List<Thread> processList = new ArrayList<Thread>();
+        for (Consumo c:consumos) { // para cada consumo, se lanza un hilo
+        	ProcesarConsumo pc = new ProcesarConsumo(red, c);
+        	Thread t = new Thread(pc);
+        	t.start();
+        	processList.add(t); // se añade a la lista de hilos
+        }
+        try {
+        	for (int i=0; i<processList.size(); i++) {
+        		processList.get(i).join(); // con join se espera para que se impriman las auditorías al final
+        	}
+        } catch (Exception e) {e.printStackTrace();}
+        
+        
+        
+        
+        red.imprimeAuditoria();
+      
+        
+    }
+}

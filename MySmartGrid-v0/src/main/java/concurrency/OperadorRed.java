@@ -1,15 +1,18 @@
 package concurrency;
 
-
 import operators.CentroControl;
 import energy.Consumo;
 import energy.ZonaEnergetica;
+import concurrency.TrabajoConsumo;
 import java.util.Random;
+
+// TODO ¿Dónde se lanzan?
 
 public class OperadorRed implements Runnable {
 	CentroControl control;
 	ZonaEnergetica zona;
 	Consumo consum;
+	TrabajoConsumo tc;
 	
 	
 	public OperadorRed (CentroControl _control, ZonaEnergetica _zona) {
@@ -19,6 +22,8 @@ public class OperadorRed implements Runnable {
 	@Override
 	public void run() {
 		while (true) {
+			tc.awaitResultado();
+			
 			// coge trabajo
 			control.cogerTrabajo(consum);
 			
@@ -42,9 +47,9 @@ public class OperadorRed implements Runnable {
 	        String resultado = (suministrado >= total)
 	                ? "OK: suministrados " + fmt(total) + " kWh"
 	                : "PARCIAL: suministrados " + fmt(suministrado) + " kWh (faltan " + fmt(total - suministrado) + " kWh)";
-	      System.out.print("Trabajo completado para: "+consum.getIdConsumo());
-			
-//	    	tc.setResultado(resultado);
+	        System.out.print("Trabajo completado para: "+consum.getIdConsumo());
+	        
+	        tc.setResultado(resultado);
 		}
 	}
 	

@@ -59,7 +59,6 @@ public class CentroControl {
     	
     	// creo trabajo consumo y lo encolo
     	TrabajoConsumo tc = new TrabajoConsumo();
-    	tc = cogerTrabajo(c);
     	colaTrabajos.add(tc);
     	
     	// ESTA PARTE SE LLEVA AL RUN DE LOS HILOS
@@ -101,6 +100,7 @@ public class CentroControl {
     	// borrar de la cola el trabajo consumo
     	// y devolverlo
     	// procesar el hilo
+    	
     	return colaTrabajos.poll();
     }
 }

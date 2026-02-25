@@ -11,6 +11,9 @@ public class TrabajoConsumo {
 	
 	// ---- VERSIÓN 3: AwaitResultado y SetResultado ----
 	
+	// TODO  ¿Funciona esta clase como recurso compartido?
+	//		 ¿Dónde llamo sus métodos?
+	
 	public void awaitResultado() {
 		// bloqueo
 		try {

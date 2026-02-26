@@ -1,5 +1,6 @@
 package concurrency;
 
+import energy.Consumo;
 
 public class TrabajoConsumo {
 
@@ -10,9 +11,15 @@ public class TrabajoConsumo {
 	// espera de forma incondicional mientras no esté el resultado
 	
 	// ---- VERSIÓN 3: AwaitResultado y SetResultado ----
-	
+	Consumo c;
+	public TrabajoConsumo (Consumo _c) {
+		c = c;
+	}
 	// TODO  ¿Funciona esta clase como recurso compartido?
 	//		 ¿Dónde llamo sus métodos?
+	Consumo getConsumo() {
+		return c;
+	}
 	
 	public void awaitResultado() {
 		// bloqueo

@@ -24,28 +24,6 @@ public class CentroControl {
     
     // TODO ¿qué hago con los TCs? ¿Dónde pongo sus métodos?
     Queue<TrabajoConsumo> colaTrabajos = new LinkedList<>(); // cola de trabajos
-
-    // Constructor CentroControl
-    public CentroControl() {
-    	
-    	// TODO ¿se lanzan aquí?
-    	// ---- VERSIÓN 3: Lanzar hilos de OperadorRed ----
-        List<Thread> operatorList = new ArrayList<Thread>();
-        for (int i = 0; i < Config.NUM_OPERADORES_POR_ZONA; i++) {
-        	OperadorRed or = new OperadorRed(this, zona);
-        	Thread t = new Thread(or);
-        	t.start();
-        	operatorList.add(t);
-        }
-        try {
-			for (int i = 0; i < operatorList.size(); i++) {
-				operatorList.get(i).join();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-        
-    }
     
     public void setZona(ZonaEnergetica zona) {
     	this.zona=zona;
@@ -58,7 +36,7 @@ public class CentroControl {
     	String resultado = "";
     	
     	// creo trabajo consumo y lo encolo
-    	TrabajoConsumo tc = new TrabajoConsumo();
+    	TrabajoConsumo tc = new TrabajoConsumo(c);
     	colaTrabajos.add(tc);
     	
     	// ESTA PARTE SE LLEVA AL RUN DE LOS HILOS
@@ -89,17 +67,17 @@ public class CentroControl {
         System.out.println("[CentroControl Z" + zona.getIdZona() + "] " + msg);
     }
     
-    public TrabajoConsumo cogerTrabajo(Consumo c) {
+    public TrabajoConsumo cogerTrabajo() {
+    	// borrar de la cola el trabajo consumo
+    	// y devolverlo
+    	// procesar el hilo
 //    	while (colaTrabajos.isEmpty()) {
-//    		try {
+//    		    		try {
 //				wait();
 //			} catch (Exception e) {
 //				e.printStackTrace();
 //			}
 //    	}
-    	// borrar de la cola el trabajo consumo
-    	// y devolverlo
-    	// procesar el hilo
     	
     	return colaTrabajos.poll();
     }

@@ -6,31 +6,26 @@ import energy.ZonaEnergetica;
 import concurrency.TrabajoConsumo;
 import java.util.Random;
 
-// TODO ¿Dónde se lanzan?
-
 public class OperadorRed implements Runnable {
 	CentroControl control;
 	ZonaEnergetica zona;
-	Consumo consum;
-	TrabajoConsumo tc;
+
 	
-	
-	public OperadorRed (CentroControl _control, ZonaEnergetica _zona) {
+	public OperadorRed (ZonaEnergetica _zona, CentroControl _control) {
+		zona = _zona;
 		control = _control;
 	}
 	
 	@Override
 	public void run() {
 		while (true) {
-			tc.awaitResultado();
 			
 			// coge trabajo
-			control.cogerTrabajo(consum);
+			TrabajoConsumo tc = control.cogerTrabajo();
+			Consumo consum = tc.getConsumo();
 			
+			tc.awaitResultado();
 			
-			// batería
-			// cuenta
-			// setResultado
 			Random r = new Random();
 	        // Simulamos un tiempo de tramitación del consumo
 	        try {
@@ -39,7 +34,6 @@ public class OperadorRed implements Runnable {
 				e.printStackTrace();
 			}
 	       
-	        // TODO ¿Cómo obtengo la c?
 	        double total = consum.getTotalKWh();
 	        double suministrado = zona.getBateria().suministra(total);
 	        zona.getCuenta().anotaConsumo(suministrado);

@@ -28,6 +28,24 @@ public class MySmartGrid {
 //        red.imprimeAuditoria();
         
 
+        // ---- VERSIÓN 3 -----
+        List<Thread> operatorList = new ArrayList<Thread>();
+        for (int j = 0; j < Config.NUM_ZONAS; j++) {
+	        for (int i = 0; i < Config.NUM_OPERADORES_POR_ZONA; i++) {
+	        	OperadorRed or = new OperadorRed(red.getZona(j), red.getZona(j).getCentroControl());
+	        	Thread t = new Thread(or);
+	        	t.start();
+	        	operatorList.add(t);
+	        }
+	        try {
+				for (int i = 0; i < operatorList.size(); i++) {
+					operatorList.get(i).join();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+        }
+        
         // ---- VERSIÓN 1: Implementar concurrencia ----
         // para cada elemento de la lista, se lanza un hilo por consumo que llama a tramitar consumo de su zona
         List<Thread> processList = new ArrayList<Thread>();
@@ -41,11 +59,7 @@ public class MySmartGrid {
         	for (int i=0; i<processList.size(); i++) {
         		processList.get(i).join(); // con join se espera para que se impriman las auditorías al final
         	}
-        } catch (Exception e) {e.printStackTrace();}
-        
-        
-        
-        
+        } catch (Exception e) {e.printStackTrace();}       
         red.imprimeAuditoria();
       
         

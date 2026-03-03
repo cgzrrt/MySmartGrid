@@ -6,6 +6,8 @@ import java.util.List;
 import concurrency.ProcesarConsumo; // Sesión 1
 import concurrency.OperadorRed; // Versión 3
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.stream.*; // versión 4
 
 public class MySmartGrid {
 	
@@ -61,6 +63,30 @@ public class MySmartGrid {
         	}
         } catch (Exception e) {e.printStackTrace();}       
         red.imprimeAuditoria();
+        
+        
+        // ---- VERSIÓN 4: Streams ----
+        // Imprimir consumos de menos de 5kwh
+        consumos.stream()
+        	.parallel()
+        	.filter(c->c.getTotalKWh() < 5)
+        	.forEach(c->System.out.println(c.getIdConsumo()));
+        // Imprimir máximo de kwh
+        consumos.stream()
+        	.parallel()
+        	.max(Comparator.comparingDouble(c->c.getTotalKWh()));
+        // encontrar direccion
+        consumos.stream()
+        .parallel()
+        .filter(c->c.getDireccion() == "Sagitario,24")
+        .findAny()
+        .ifPresent(c->System.out.println("Encontrado"));
+        consumos.stream()
+        .parallel()
+        .filter(c->c.getDireccion() == "Berna,11")
+        .findAny()
+        .ifPresent(c->System.out.println("Encontrado"));
+        
       
         
     }

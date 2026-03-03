@@ -71,6 +71,7 @@ public class CentroControl {
     	// borrar de la cola el trabajo consumo
     	// y devolverlo
     	// procesar el hilo
+    	// TODO ¿wait?
 //    	while (colaTrabajos.isEmpty()) {
 //    		    		try {
 //				wait();

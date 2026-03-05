@@ -24,6 +24,7 @@ public class CentroControl {
     
     // TODO ¿qué hago con los TCs? ¿Dónde pongo sus métodos?
     Queue<TrabajoConsumo> colaTrabajos = new LinkedList<>(); // cola de trabajos
+    boolean colaVacia = true;
     
     public void setZona(ZonaEnergetica zona) {
     	this.zona=zona;
@@ -32,12 +33,21 @@ public class CentroControl {
     public int getIdZona() { return zona.getIdZona(); }
 
     // ---- VERSIÓN 3: Se lleva una parte de este método al hilo ----
-    public String enviarTrabajo(Consumo c) {
-    	String resultado = "";
-    	
+    public synchronized TrabajoConsumo enviarTrabajo(Consumo c) {    	
     	// creo trabajo consumo y lo encolo
-    	TrabajoConsumo tc = new TrabajoConsumo(c);
-    	colaTrabajos.add(tc);
+    	
+    	// System.out.println("añadiendo trabajo en zona: " + zona.getIdZona() + " con consumo: " + c.getTotalKWh());
+    	
+	    TrabajoConsumo tc = new TrabajoConsumo(c.getTotalKWh());
+	    colaTrabajos.add(tc);
+	    try {
+			notifyAll();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	
+    	
+    	// System.out.println("----- Trabajo añadido en zona: " + zona.getIdZona() + ", total: " + colaTrabajos.size());
     	
     	// ESTA PARTE SE LLEVA AL RUN DE LOS HILOS
 //    	Random r = new Random();
@@ -56,7 +66,7 @@ public class CentroControl {
 //                ? "OK: suministrados " + fmt(total) + " kWh"
 //                : "PARCIAL: suministrados " + fmt(suministrado) + " kWh (faltan " + fmt(total - suministrado) + " kWh)";
 //    	traza ("Trabajo completado para: "+c.getIdConsumo());
-        return resultado;
+        return tc;
     }
     
     private String fmt(double x) {
@@ -71,15 +81,16 @@ public class CentroControl {
     	// borrar de la cola el trabajo consumo
     	// y devolverlo
     	// procesar el hilo
-    	// TODO ¿wait?
-//    	while (colaTrabajos.isEmpty()) {
-//    		    		try {
-//				wait();
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//    	}
-    	
+    	while (colaTrabajos.isEmpty()) {
+    		synchronized (this) {	
+	    		try {
+					wait();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+    		}
+    	}
     	return colaTrabajos.poll();
     }
+ 
 }

@@ -11,27 +11,37 @@ public class TrabajoConsumo {
 	// espera de forma incondicional mientras no esté el resultado
 	
 	// ---- VERSIÓN 3: AwaitResultado y SetResultado ----
-	Consumo c;
-	public TrabajoConsumo (Consumo _c) {
-		c = c;
-	}
-	// TODO  ¿Funciona esta clase como recurso compartido?
-	//		 ¿Dónde llamo sus métodos?
-	Consumo getConsumo() {
-		return c;
-	}
+	Double totalKw;
+	String resultado = "";
+	boolean resultObtenido = false;
 	
-	public void awaitResultado() {
-		// bloqueo
-		try {
-			wait();
-		} catch (Exception e) { e.printStackTrace(); }
+	public TrabajoConsumo (Double _totalKw) {
+		totalKw = _totalKw;
+	}
+
+	public synchronized void awaitResultado() {
+		// bloqueo 
+		// comprobar con un bucle
+		while (!resultObtenido) {
+			try {
+				wait();
+			} catch (Exception e) { e.printStackTrace(); }
+		}
 	}
 	
 	// da igual si es notify o notifyAll porque solo hay un hilo
-	public void setResultado(String resultado) {
+	public synchronized void setResultado(String _resultado) {
 		// desbloqueo
-		System.out.println(resultado);
+		resultObtenido = true;
+		resultado = _resultado;
 		notify();
+	}
+	
+	// métodos auxiliares
+	public Double getConsumo() {
+		return totalKw;
+	}
+	public String getResultado() {
+		return resultado;
 	}
 }

@@ -35,18 +35,17 @@ public class MySmartGrid {
         for (int j = 0; j < Config.NUM_ZONAS; j++) {
 	        for (int i = 0; i < Config.NUM_OPERADORES_POR_ZONA; i++) {
 	        	OperadorRed or = new OperadorRed(red.getZona(j), red.getZona(j).getCentroControl());
-	        	Thread t = new Thread(or);
-	        	t.start();
-	        	operatorList.add(t);
+	        	Thread o = new Thread(or);
+	        	o.start();
+	        	operatorList.add(o);
+	        	
+	        	// 	System.out.println("Operario lanzado en " + red.getZona(j).getIdZona());
 	        }
-	        try {
-				for (int i = 0; i < operatorList.size(); i++) {
-					operatorList.get(i).join();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
         }
+        // System.out.println("acabao");
+
+                
+       // System.out.println("Operarios lanzados, vamos a lanzar los procesos");
         
         // ---- VERSIÓN 1: Implementar concurrencia ----
         // para cada elemento de la lista, se lanza un hilo por consumo que llama a tramitar consumo de su zona
@@ -56,14 +55,27 @@ public class MySmartGrid {
         	Thread t = new Thread(pc);
         	t.start();
         	processList.add(t); // se añade a la lista de hilos
+        	
+        	System.out.println("Consumo " + c.getIdConsumo());
         }
         try {
         	for (int i=0; i<processList.size(); i++) {
         		processList.get(i).join(); // con join se espera para que se impriman las auditorías al final
         	}
-        } catch (Exception e) {e.printStackTrace();}       
-        red.imprimeAuditoria();
+        } catch (Exception e) {e.printStackTrace();}     
         
+        try {
+			for (int i = 0; i < operatorList.size(); i++) {
+				operatorList.get(i).join();
+				System.out.println("----- OH WOW ------");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        
+        System.out.println("AUDITORIAS");
+        
+        red.imprimeAuditoria();
         
         // ---- VERSIÓN 4: Streams ----
         // Imprimir consumos de menos de 5kwh

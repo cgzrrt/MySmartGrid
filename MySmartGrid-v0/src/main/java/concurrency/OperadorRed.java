@@ -19,12 +19,9 @@ public class OperadorRed implements Runnable {
 	@Override
 	public void run() {
 		while (true) {
-			
 			// coge trabajo
 			TrabajoConsumo tc = control.cogerTrabajo();
-			Consumo consum = tc.getConsumo();
-			
-			tc.awaitResultado();
+			Double consum = tc.getConsumo();
 			
 			Random r = new Random();
 	        // Simulamos un tiempo de tramitación del consumo
@@ -34,14 +31,14 @@ public class OperadorRed implements Runnable {
 				e.printStackTrace();
 			}
 	       
-	        double total = consum.getTotalKWh();
+	        double total = consum;
 	        double suministrado = zona.getBateria().suministra(total);
 	        zona.getCuenta().anotaConsumo(suministrado);
 	        
 	        String resultado = (suministrado >= total)
 	                ? "OK: suministrados " + fmt(total) + " kWh"
 	                : "PARCIAL: suministrados " + fmt(suministrado) + " kWh (faltan " + fmt(total - suministrado) + " kWh)";
-	        System.out.print("Trabajo completado para: "+consum.getIdConsumo());
+	        System.out.println("Trabajo completado para: "+consum);
 	        
 	        tc.setResultado(resultado);
 		}

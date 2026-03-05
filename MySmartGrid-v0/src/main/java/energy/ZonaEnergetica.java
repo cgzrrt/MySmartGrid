@@ -11,6 +11,7 @@ import java.util.Objects;
 
 import concurrency.OperadorRed;
 import main.Config;
+import concurrency.TrabajoConsumo;
 
 public class ZonaEnergetica {
     private final int idZona;
@@ -25,26 +26,6 @@ public class ZonaEnergetica {
         this.bateria = Objects.requireNonNull(bateria);
         this.centroControl = Objects.requireNonNull(centroControl);
         this.v = _v;
-        
-        
-        // TODO ¿se lanzan aquí?
-    	// ---- VERSIÓN 3: Lanzar hilos de OperadorRed ----
-        // Para cada zona, varios operadores
-//        List<Thread> operatorList = new ArrayList<Thread>();
-//        for (int i = 0; i < Config.NUM_OPERADORES_POR_ZONA; i++) {
-//        	OperadorRed or = new OperadorRed(this, centroControl);
-//        	Thread t = new Thread(or);
-//        	t.start();
-//        	operatorList.add(t);
-//        }
-//        try {
-//			for (int i = 0; i < operatorList.size(); i++) {
-//				operatorList.get(i).join();
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}	
-        
     }
 
     public int getIdZona() { return idZona; }
@@ -54,15 +35,17 @@ public class ZonaEnergetica {
 
     // ---- VERSIÓN 2: Aquí también se podría poner synchronized ----
     public String tramitarConsumo(Consumo c) {
-    	// ---- VERSIÓN 3: Llamar enviarTrabajo ----
-    	
         if (c.getZona() != idZona) {
             return "ERROR: consumo dirigido a zona " + c.getZona() + " pero tramitado en zona " + idZona;
         }
 
         v.traza (c.getIdConsumo()+" solicita: "+c.getTotalKWh(), Color.BLUE);
-        String resultado = centroControl.enviarTrabajo(c);
-
+        
+        // ---- VERSIÓN 3: Llamar enviarTrabajo ---- aquí se envía, no en operador red y bloqueo
+    	TrabajoConsumo tc = centroControl.enviarTrabajo(c);
+    	tc.awaitResultado();
+    	String resultado = tc.getResultado();
+        
         return resultado;
     }
 

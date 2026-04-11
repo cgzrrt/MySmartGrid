@@ -3,25 +3,20 @@ package concurrency;
 import energy.Consumo;
 
 public class TrabajoConsumo {
-
-	// se bloquea hasta que esté disponible el trabajo
-	// cuando deja el trabajo, esperas
-	// en setResultado desbloquea
-	// se bloquea sí o sí
-	// espera de forma incondicional mientras no esté el resultado
-	
 	// ---- VERSIÓN 3: AwaitResultado y SetResultado ----
 	Double totalKw;
+	String idConsum;
 	String resultado = "";
 	boolean resultObtenido = false;
+	Consumo consum;
 	
-	public TrabajoConsumo (Double _totalKw) {
-		totalKw = _totalKw;
+	public TrabajoConsumo (Consumo _consum) {
+//		totalKw = _totalKw;
+		consum = _consum;
 	}
 
 	public synchronized void awaitResultado() {
-		// bloqueo 
-		// comprobar con un bucle
+		// mientras no obtenga el resultado, se espera
 		while (!resultObtenido) {
 			try {
 				wait();
@@ -34,14 +29,17 @@ public class TrabajoConsumo {
 		// desbloqueo
 		resultObtenido = true;
 		resultado = _resultado;
-		notify();
+		notifyAll();
 	}
 	
 	// métodos auxiliares
-	public Double getConsumo() {
-		return totalKw;
+	public Consumo getConsumo() {
+		return consum;
 	}
 	public String getResultado() {
 		return resultado;
+	}
+	public String getIdConsumo() {
+		return idConsum;
 	}
 }

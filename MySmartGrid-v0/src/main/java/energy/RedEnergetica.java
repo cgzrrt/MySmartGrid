@@ -3,6 +3,8 @@ package energy;
 import operators.CentroControl;
 import pcd.util.Ventana;
 import storage.Bateria;
+import storage.BateriaSolar; 
+import storage.BateriaEolica;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,14 +23,19 @@ public class RedEnergetica {
         List<ZonaEnergetica> tmp = new ArrayList<>(numZonas);
         List<CentroControl> ccs = new ArrayList<>(numZonas);
         Bateria bateria = null;
+        // ----- VERSIÓN 5: Baterías nuevas -----
+        BateriaSolar bateriaSol = null;
+        BateriaEolica bateriaEol = null;
         
         for (int i = 0; i < numZonas; i++) {
             CentroControl cc = new CentroControl();
             ccs.add(cc);
             CuentaEnergetica cuenta = new CuentaEnergetica(0.0);
             bateria = new Bateria(capacidadBateria, nivelInicialBateria);
+            bateriaSol = new BateriaSolar(capacidadBateria, nivelInicialBateria);
+            bateriaEol = new BateriaEolica(capacidadBateria, nivelInicialBateria);
             Ventana ventanaZona = new Ventana (i*Config.TAMAÑO_VENTANA,1,Config.TAMAÑO_VENTANA, Config.TAMAÑO_VENTANA,"Zona "+i);
-            zona = new ZonaEnergetica(i, cuenta, bateria, cc, ventanaZona);
+            zona = new ZonaEnergetica(i, cuenta, bateria, cc, ventanaZona, bateriaSol, bateriaEol);
             bateria.setVentana(ventanaZona);
             cc.setZona(zona);
             tmp.add(zona);
@@ -57,11 +64,17 @@ public class RedEnergetica {
 
     public void imprimeAuditoria() {
         System.out.println("\n=== AUDITORIA RED ===");
-        for (ZonaEnergetica z : zonas) {
-            System.out.println("Zona " + z.getIdZona()
-                    + " | consumidos =" + fmt(z.getCuenta().getBalanceKWh()) + " kWh"
-                    + " | bateria=" + fmt(z.getBateria().getNivelActualKWh()) + " kWh");
-        }
+//        for (ZonaEnergetica z : zonas) {
+//            System.out.println("Zona " + z.getIdZona()
+//                    + " | consumidos =" + fmt(z.getCuenta().getBalanceKWh()) + " kWh"
+//                    + " | bateria=" + fmt(z.getBateria().getNivelActualKWh()) + " kWh");
+//        }
+        
+        // ----- VERSIÓN 4: Auditorías con streams -----
+        zonas.stream()
+        	.parallel()
+        	.forEach(z->System.out.println("Zona " + z.getIdZona() + " | consumidos =" + fmt(z.getCuenta().getBalanceKWh()) + " kWh" + " | bateria=" + fmt(z.getBateria().getNivelActualKWh()) + " kWh"));
+        
         System.out.println("Consumo total: " + fmt(auditoriaBalanceTotal()) + " kWh");
         System.out.println("Energia disponible total: " + fmt(auditoriaEnergiaDisponibleTotal()) + " kWh");
         System.out.println("=====================\n");

@@ -15,6 +15,10 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.observables.ConnectableObservable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
 public class MySmartGrid {
 	
     public static void main(String[] args) {
@@ -27,6 +31,23 @@ public class MySmartGrid {
         List<Consumo> consumos = Consumo.consumosDesdeFichero(Config.FICHERO_CONSUMOS);
         System.out.println("Leidos " + consumos.size() + " consumos desde " + Config.FICHERO_CONSUMOS);
       
+        // ---- VERSIÓN 7: Observables ----
+        // Suma de todos los consumos
+        Observable<Consumo> obs1 = Observable.fromIterable(consumos);
+        obs1
+        	.subscribeOn(Schedulers.computation())
+        	.map( c -> c.getTotalKWh() )
+        	.reduce(0.0, Double::sum) // realiza la suma
+        	.subscribe( c -> System.out.println("Hilo actual: " + Thread.currentThread() + ". Sumado: " + c) );
+        // Imprimir consumos mayores a 20kw
+        Observable<Consumo> obs2 = Observable.fromIterable(consumos);
+        obs2
+        	.subscribeOn(Schedulers.computation())
+        	.filter( c -> c.getTotalKWh() > 20 )
+        	.subscribe( c -> System.out.println( "Consumo: "+ c.getIdConsumo() + " con KWh: " + c.getTotalKWh() + "\n Hilo actual: " + Thread.currentThread() ) );
+        
+        
+        
         // Tramitamos los consumos de manera secuencial
 //        String resultado;
 //        for (Consumo c:consumos) {
@@ -104,4 +125,5 @@ public class MySmartGrid {
         	.findAny()
         	.ifPresent(c->System.out.println("Encontrado: " + c.getDireccion()));
     }
+    
 }

@@ -12,6 +12,8 @@ import energy.Consumo;
 import energy.RedEnergetica;
 
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -82,20 +84,55 @@ public class MySmartGrid {
 	        reol.start();
         }
 
-        // ---- VERSIÓN 1: Implementar concurrencia ----
-        // para cada elemento de la lista, se lanza un hilo por consumo que llama a tramitar consumo de su zona
-        List<Thread> processList = new ArrayList<Thread>();
-        for (Consumo c:consumos) { // para cada consumo, se lanza un hilo
-        	ProcesarConsumo pc = new ProcesarConsumo(red, c);
-        	Thread t = new Thread(pc);
-        	t.start();
-        	processList.add(t); // se añade a la lista de hilos
-        }
-        try {
-        	for (int i=0; i<processList.size(); i++) {
-        		processList.get(i).join(); // con join se espera para que se impriman las auditorías al final
+        // DISTINTAS FORMAS DE LANZAR PEDIDOS
+        switch(Config.TIPO_LANZADO) {
+        case 0: // Forma concurrente
+        	
+        	// ---- VERSIÓN 1: Implementar concurrencia ----
+            // para cada elemento de la lista, se lanza un hilo por consumo que llama a tramitar consumo de su zona
+            List<Thread> processList = new ArrayList<Thread>();
+            for (Consumo c:consumos) { // para cada consumo, se lanza un hilo
+            	ProcesarConsumo pc = new ProcesarConsumo(red, c);
+            	Thread t = new Thread(pc);
+            	t.start();
+            	processList.add(t); // se añade a la lista de hilos
+            }
+            try {
+            	for (int i=0; i<processList.size(); i++) {
+            		processList.get(i).join(); // con join se espera para que se impriman las auditorías al final
+            	}
+            } catch (Exception e) {e.printStackTrace();}  
+            
+        	break;
+        case 1: // Observables
+        	
+        	// ---- VERSIÓN 7: Lanzar desde observables ----
+        	Observable<Consumo> oConsum;
+        	oConsum = Consumo.consumosDesdeFicheroObservable(Config.FICHERO_CONSUMOS);
+        	
+        	oConsum.subscribeOn(Schedulers.computation())
+        			.flatMap( i -> Observable.just(i)
+        					.map(null)
+        					.doOnNext(null));
+        	
+        	break;
+        case 2:
+        	ThreadPoolExecutor executor;
+        	executor = (ThreadPoolExecutor)Executors.newCachedThreadPool();
+        	
+        	for (Consumo c:consumos) {
+        		ProcesarConsumo pc = new ProcesarConsumo(red, c);
+        		executor.execute(pc);
         	}
-        } catch (Exception e) {e.printStackTrace();}     
+        	
+//        	for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
+//        		
+//        	}
+        	
+        	
+        	executor.shutdown(); // si no lo invocamos, no acaba
+        	break;
+        }
 
         red.imprimeAuditoria();
         

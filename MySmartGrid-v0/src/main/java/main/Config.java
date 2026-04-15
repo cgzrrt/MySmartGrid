@@ -7,6 +7,7 @@ public final class Config {
     public static final int NUM_OPERADORES_POR_ZONA = 3; // hilos que se crean
     public static final int NUM_ZONAS = 5;
     public static final int NUM_MAX_CONSUMOS = 3; // ---- VERSION 6 ----
+    public static final int TIPO_LANZADO = 2; // 0: normal 1: observables 2: executor
     
     // --- Ventanas ---
     public static final int TAMAÑO_VENTANA = 250;

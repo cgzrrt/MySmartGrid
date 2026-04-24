@@ -14,6 +14,7 @@ import energy.RedEnergetica;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -47,9 +48,7 @@ public class MySmartGrid {
         	.subscribeOn(Schedulers.computation())
         	.filter( c -> c.getTotalKWh() > 20 )
         	.subscribe( c -> System.out.println( "Consumo: "+ c.getIdConsumo() + " con KWh: " + c.getTotalKWh() + "\n Hilo actual: " + Thread.currentThread() ) );
-        
-        
-        
+          
         // Tramitamos los consumos de manera secuencial
 //        String resultado;
 //        for (Consumo c:consumos) {
@@ -110,27 +109,26 @@ public class MySmartGrid {
         	Observable<Consumo> oConsum;
         	oConsum = Consumo.consumosDesdeFicheroObservable(Config.FICHERO_CONSUMOS);
         	
-        	oConsum.subscribeOn(Schedulers.computation())
-        			.flatMap( i -> Observable.just(i)
-        					.map(null)
-        					.doOnNext(null));
-        	
+        	oConsum.flatMap( i -> Observable.just(i) 
+        					.subscribeOn(Schedulers.io())
+        					.map(c -> red.getZona(c.getZona()).tramitarConsumo(c)) // tramita el consumo
+        					.doOnNext(r -> red.getZona(i.getZona()).getVentana().traza(i.getIdConsumo() + ": " + r)) // imprime el resultado
+        					).blockingSubscribe();
         	break;
         case 2:
+        	// ---- VERSIÓN 8: Executor ----
         	ThreadPoolExecutor executor;
-        	executor = (ThreadPoolExecutor)Executors.newCachedThreadPool();
+        	executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         	
         	for (Consumo c:consumos) {
         		ProcesarConsumo pc = new ProcesarConsumo(red, c);
         		executor.execute(pc);
         	}
-        	
-//        	for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
-//        		
-//        	}
-        	
-        	
-        	executor.shutdown(); // si no lo invocamos, no acaba
+        	executor.shutdown(); // si no se invoca, no acaba
+  
+        	try { // para esperar y que no salten antes las auditorias
+        		executor.awaitTermination(7, TimeUnit.SECONDS);
+			} catch (Exception e) { e.printStackTrace(); }
         	break;
         }
 

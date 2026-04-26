@@ -2,9 +2,11 @@ package main;
 
 import concurrency.ProcesarConsumo; // Sesión 1
 import concurrency.OperadorRed; // Versión 3
+import concurrency.CallableConsumo;
 import concurrency.OperadorCarga;
 import concurrency.RobotEolico;
 import concurrency.RobotSolar;
+import concurrency.Task;
 import concurrency.TodosConsum;
 import concurrency.TodosOp;
 
@@ -13,6 +15,7 @@ import energy.RedEnergetica;
 
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
@@ -132,6 +135,28 @@ public class MySmartGrid {
         	break;
         }
 
+        
+        // ---- VERSIÓN 8: Callable ----
+        System.out.println("\n*** CALLABLE ***");
+        CallableConsumo cc = new CallableConsumo(consumos);
+        Consumo cmax = null;
+        try {
+			cmax = cc.call();
+		} catch (Exception e) { e.printStackTrace(); }
+        System.out.println("Consumo más alto: " + cmax.getIdConsumo()
+        					+ " con total KW: " + cmax.getTotalKWh());
+        
+        // ---- VERSIÓN 8: ForkJoin ----
+        System.out.println("\n*** FORK JOIN ***");
+        ForkJoinPool pool = new ForkJoinPool();
+        Task t = new Task(consumos);
+        List<Consumo> listaFJ = pool.invoke(t);
+        for (Consumo c:listaFJ) {
+        	System.out.println("Consumo: " + c.getIdConsumo()
+			+ " con total KW: " + c.getTotalKWh());
+        }
+        
+        
         red.imprimeAuditoria();
         
         // ---- VERSIÓN 4: Streams ----

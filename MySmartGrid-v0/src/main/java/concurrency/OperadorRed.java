@@ -2,6 +2,8 @@ package concurrency;
 
 import operators.CentroControl;
 import energy.ZonaEnergetica;
+import main.Config;
+
 import java.util.Random;
 
 public class OperadorRed implements Runnable {
@@ -9,19 +11,31 @@ public class OperadorRed implements Runnable {
 	private ZonaEnergetica zona;
 	private TodosOp todos;
 	private TodosConsum todCon;
+	private TodosCB todosCB;
 	
-	public OperadorRed (ZonaEnergetica _zona, CentroControl _control, TodosOp _todos, TodosConsum _todCon) {
+	public OperadorRed (ZonaEnergetica _zona, CentroControl _control, TodosOp _todos, TodosConsum _todCon, TodosCB _todosCB) {
 		zona = _zona;
 		control = _control;
 		todos = _todos;
 		todCon = _todCon;
+		todosCB = _todosCB;
 	}
 	
 	@Override
 	public void run() {
+		switch (Config.TIPO_TODOS) {
+		case 0:
+			todos.operadoresLanzados();
+			break;
+		case 1:
+			todosCB.operadoresLanzados();
+			break;
+		}
+		
 		while (true) {
 			// System.out.println("--- OPERADOR DE ZONA " + zona.getIdZona());
-			todos.operadoresLanzados();
+			
+			
 			
 			// coge trabajo
 			TrabajoConsumo tc = control.cogerTrabajo();

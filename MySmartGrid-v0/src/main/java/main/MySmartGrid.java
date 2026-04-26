@@ -7,6 +7,7 @@ import concurrency.OperadorCarga;
 import concurrency.RobotEolico;
 import concurrency.RobotSolar;
 import concurrency.Task;
+import concurrency.TodosCB;
 import concurrency.TodosConsum;
 import concurrency.TodosOp;
 
@@ -64,11 +65,12 @@ public class MySmartGrid {
         // Con estos hilos no hace falta hacer join porque se queda bloqueado el programa
         for (int j = 0; j < Config.NUM_ZONAS; j++) {
         	// ---- VERSION 5: Semaforos ----
+        	TodosCB tCB = new TodosCB(Config.NUM_OPERADORES_POR_ZONA); 
             TodosOp t = new TodosOp(Config.NUM_OPERADORES_POR_ZONA);
             TodosConsum tcon = new TodosConsum(Config.NUM_MAX_CONSUMOS, red.getZona(j).getVentana());
 	        for (int i = 0; i < Config.NUM_OPERADORES_POR_ZONA; i++) {
 	        	// operadores de red, traminan los consumos
-	        	OperadorRed or = new OperadorRed(red.getZona(j), red.getZona(j).getCentroControl(), t, tcon);
+	        	OperadorRed or = new OperadorRed(red.getZona(j), red.getZona(j).getCentroControl(), t, tcon, tCB);
 	        	Thread o = new Thread(or);
 	        	o.start();
 	        }

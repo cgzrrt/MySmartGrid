@@ -8,6 +8,7 @@ public final class Config {
     public static final int NUM_ZONAS = 5;
     public static final int NUM_MAX_CONSUMOS = 3; // ---- VERSION 6 ----
     public static final int TIPO_LANZADO = 2; // 0: normal 1: observables 2: executor
+    public static final int TIPO_TODOS = 1; // 0: semaforo 1: CB
     
     // --- Ventanas ---
     public static final int TAMAÑO_VENTANA = 250;

@@ -35,7 +35,4 @@ public class TodosOp {
 			} catch (InterruptedException e) { e.printStackTrace();	}
 		}
 	}
-	
-	
-	
 }

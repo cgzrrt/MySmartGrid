@@ -3,6 +3,7 @@ package main;
 import concurrency.ProcesarConsumo; // Sesión 1
 import concurrency.OperadorRed; // Versión 3
 import concurrency.CallableConsumo;
+import concurrency.EsperaOpCDL;
 import concurrency.OperadorCarga;
 import concurrency.RobotEolico;
 import concurrency.RobotSolar;

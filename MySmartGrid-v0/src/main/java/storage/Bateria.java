@@ -1,5 +1,6 @@
 package storage;
 
+import concurrency.EsperaOpCDL;
 import pcd.util.ColoresConsola;
 import pcd.util.Traza;
 import pcd.util.Ventana;
@@ -9,6 +10,7 @@ public class Bateria {
     private double nivelActualKWh;
     Ventana v;
     private boolean llenar; // VERSIÓN 3
+    private EsperaOpCDL cdl; // VERSIÓN 8
 
     public Bateria(double capacidadMaxKWh, double nivelInicialKWh) {
         if (capacidadMaxKWh <= 0) throw new IllegalArgumentException("capacidadMaxKWh debe ser > 0");
@@ -41,6 +43,7 @@ public class Bateria {
     }
 
     public synchronized void carga(double kWh) {
+    	// cdl.bloquearBateria(); // VERSIÓN 8
         if (kWh <= 0) return;
         if(llenar) {
 	        nivelActualKWh = Math.min(capacidadMaxKWh, nivelActualKWh + kWh);

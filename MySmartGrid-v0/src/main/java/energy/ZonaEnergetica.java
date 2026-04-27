@@ -9,6 +9,7 @@ import java.util.Objects;
 
 import concurrency.TrabajoConsumo;
 import main.Config;
+import concurrency.EsperaOpCDL;
 import concurrency.TodosConsum;
 
 public class ZonaEnergetica {

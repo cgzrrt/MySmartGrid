@@ -13,6 +13,8 @@ public class OperadorRed implements Runnable {
 	private TodosConsum todCon;
 	private TodosCB todosCB;
 	
+	private EsperaOpCDL cdl; // VERSIÓN 8
+	
 	public OperadorRed (ZonaEnergetica _zona, CentroControl _control, TodosOp _todos, TodosConsum _todCon, TodosCB _todosCB) {
 		zona = _zona;
 		control = _control;
@@ -23,6 +25,9 @@ public class OperadorRed implements Runnable {
 	
 	@Override
 	public void run() {
+		
+		// cdl.operadorEjecutando(); // VERSIÓN 8
+		
 		switch (Config.TIPO_TODOS) {
 		case 0:
 			todos.operadoresLanzados();

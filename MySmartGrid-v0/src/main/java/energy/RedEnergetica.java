@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import concurrency.EsperaOpCDL;
 import main.Config;
 
 public class RedEnergetica {

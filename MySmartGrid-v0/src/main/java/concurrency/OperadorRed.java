@@ -3,6 +3,13 @@ package concurrency;
 import operators.CentroControl;
 import energy.ZonaEnergetica;
 import main.Config;
+import grpc.MonitorizacionGrpc;
+import grpc.MonitorizacionGrpc.MonitorizacionBlockingStub;
+import grpc.MonitorizacionProto.ConsumoReply;
+import grpc.MonitorizacionProto.ConsumoRequest;
+import io.grpc.Grpc;
+import io.grpc.InsecureChannelCredentials;
+import io.grpc.ManagedChannel;
 
 import java.util.Random;
 
@@ -15,12 +22,24 @@ public class OperadorRed implements Runnable {
 	
 	private EsperaOpCDL cdl; // VERSIÓN 8
 	
+	private ManagedChannel channel;
+	private MonitorizacionBlockingStub blockingStub;
+	
 	public OperadorRed (ZonaEnergetica _zona, CentroControl _control, TodosOp _todos, TodosConsum _todCon, TodosCB _todosCB) {
 		zona = _zona;
 		control = _control;
 		todos = _todos;
 		todCon = _todCon;
 		todosCB = _todosCB;
+		
+		
+		// ---- VERSIÓN 9: Unary ----
+		String target="9002";
+		channel = Grpc
+			.newChannelBuilder(target, InsecureChannelCredentials.create())
+			.build();
+		
+		blockingStub = MonitorizacionGrpc.newBlockingStub(channel);	
 	}
 	
 	@Override
@@ -80,6 +99,17 @@ public class OperadorRed implements Runnable {
 		     			// Traza.traza(ColoresConsola.PURPLE, 0, "** CONSUMO RÁPIDO **");
 		     		break;
 		     	}
+	     		
+	     		// ---- VERSIÓN 9: Unary ----
+	     		System.out.println ("####### EJECUTAR ANOTAR CONSUMO #######\n");
+				ConsumoRequest consumoRequest =
+					ConsumoRequest.newBuilder().setDireccion(tc.getConsumo().getDireccion())
+						.setIdConsumo(tc.getIdConsumo())
+						.setIdZona(tc.getConsumo().getZona())
+						.setKWh(tc.getConsumo().getTotalKWh())
+						.setSolar(d.equals("SOLAR"))
+						.build();
+				ConsumoReply consumoReply = blockingStub.anotarConsumo(consumoRequest);
 	     	}
 	     	// ---------------------------------------------------
 
@@ -93,6 +123,8 @@ public class OperadorRed implements Runnable {
 	        todCon.tramitadoFinalizado(tc.getConsumo().getIdConsumo());
 	        
 	        tc.setResultado(resultado);
+	        
+	        
 		}
 	}
 	
@@ -104,4 +136,18 @@ public class OperadorRed implements Runnable {
 	public void traza(String msg) {
         System.out.println("[CentroControl Z" + zona.getIdZona() + "] " + msg);
     }
+	
+	
+	public void anotarConsumoCliente() {
+		
+//		HelloRequest helloRequest =
+//				HelloRequest.newBuilder().setName("Celia").build();
+//		System.out.println ("Sending to server: "+helloRequest.getName()+"\n");
+//		//Send request to Server
+//		HelloReply helloReply = greeterStubBlocking.sayHello(helloRequest);
+//		System.out.println(helloReply.getMessage());
+	}
+	
+	
+	
 }

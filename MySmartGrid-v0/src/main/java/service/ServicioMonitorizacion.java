@@ -11,6 +11,8 @@ import grpc.MonitorizacionProto.ConsumoReply;
 import grpc.MonitorizacionProto.ConsumoRequest;
 import grpc.MonitorizacionProto.DemandaReply;
 import grpc.MonitorizacionProto.DemandaRequest;
+import grpc.MonitorizacionProto.DireccionReply;
+import grpc.MonitorizacionProto.DireccionRequest;
 import io.grpc.stub.StreamObserver;;
 
 public class ServicioMonitorizacion extends MonitorizacionImplBase {
@@ -47,6 +49,7 @@ public class ServicioMonitorizacion extends MonitorizacionImplBase {
 		responseObserver.onCompleted();
 	}
 
+	
 	public void demandaSolar(DemandaRequest request, StreamObserver<DemandaReply> responseObserver) {
 		// recorremos la lista
 		for (ConsumoAnotado c:consumosAnotados) {
@@ -58,4 +61,32 @@ public class ServicioMonitorizacion extends MonitorizacionImplBase {
 		}
 		responseObserver.onCompleted();
 	}
+	
+	public StreamObserver<DireccionRequest> consumosDireccion (StreamObserver<DireccionReply> responseObserver) {
+		return new StreamObserver<DireccionRequest>() {
+			int totalSolar = 0;
+			@Override
+			public void onNext(DireccionRequest value) {
+				for (ConsumoAnotado c:consumosAnotados) {
+					if (c.getDireccion().equals(value.getDireccion())) {
+						totalSolar+=1;
+					}
+				}
+				
+			}
+			@Override
+			public void onError(Throwable t) {
+				System.out.print("error:{}"+ t.getMessage());
+			}
+			@Override
+			public void onCompleted() {
+				DireccionReply response = DireccionReply.newBuilder().setTotal(totalSolar).build();
+				responseObserver.onNext(response);
+				responseObserver.onCompleted();
+				
+			}
+			
+		};
+	}
+	
 }

@@ -34,7 +34,7 @@ public class OperadorRed implements Runnable {
 		
 		
 		// ---- VERSIÓN 9: Unary ----
-		String target="9002";
+		String target="localhost:9002";
 		channel = Grpc
 			.newChannelBuilder(target, InsecureChannelCredentials.create())
 			.build();
@@ -104,7 +104,7 @@ public class OperadorRed implements Runnable {
 	     		System.out.println ("####### EJECUTAR ANOTAR CONSUMO #######\n");
 				ConsumoRequest consumoRequest =
 					ConsumoRequest.newBuilder().setDireccion(tc.getConsumo().getDireccion())
-						.setIdConsumo(tc.getIdConsumo())
+						.setIdConsumo(tc.getConsumo().getIdConsumo())
 						.setIdZona(tc.getConsumo().getZona())
 						.setKWh(tc.getConsumo().getTotalKWh())
 						.setSolar(d.equals("SOLAR"))

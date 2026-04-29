@@ -5,7 +5,7 @@ import energy.Consumo;
 public class TrabajoConsumo {
 	// ---- VERSIÓN 3: AwaitResultado y SetResultado ----
 	Double totalKw;
-	String idConsum;
+//	String idConsum;
 	String resultado = "";
 	boolean resultObtenido = false;
 	Consumo consum;
@@ -39,7 +39,7 @@ public class TrabajoConsumo {
 	public String getResultado() {
 		return resultado;
 	}
-	public String getIdConsumo() {
-		return idConsum;
-	}
+//	public String getIdConsumo() {
+//		return idConsum;
+//	}
 }

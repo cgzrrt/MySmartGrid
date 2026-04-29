@@ -13,9 +13,11 @@ import concurrency.TodosConsum;
 import concurrency.TodosOp;
 
 import energy.Consumo;
+import energy.Demanda;
 import energy.RedEnergetica;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -23,9 +25,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import io.grpc.Grpc;
+import io.grpc.InsecureChannelCredentials;
+import io.grpc.ManagedChannel;
+import io.grpc.Status;
+import io.grpc.stub.ClientResponseObserver;
+import io.grpc.stub.StreamObserver;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.observables.ConnectableObservable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import grpc.PreciosProto.DemandaRequest;
+import grpc.PreciosGrpc;
+import grpc.PreciosGrpc.PreciosBlockingStub;
+import grpc.PreciosGrpc.PreciosStub;
+import grpc.PreciosProto.PreciosReply;
+import grpc.PreciosProto.PreciosRequest;
+
+import pcd.util.Ventana;
 
 public class MySmartGrid {
 	
@@ -69,14 +85,15 @@ public class MySmartGrid {
         	TodosCB tCB = new TodosCB(Config.NUM_OPERADORES_POR_ZONA); 
             TodosOp t = new TodosOp(Config.NUM_OPERADORES_POR_ZONA);
             TodosConsum tcon = new TodosConsum(Config.NUM_MAX_CONSUMOS, red.getZona(j).getVentana());
+            EsperaOpCDL cdl = new EsperaOpCDL(Config.NUM_OPERADORES_POR_ZONA); // VERSIÓN 8
 	        for (int i = 0; i < Config.NUM_OPERADORES_POR_ZONA; i++) {
 	        	// operadores de red, traminan los consumos
-	        	OperadorRed or = new OperadorRed(red.getZona(j), red.getZona(j).getCentroControl(), t, tcon, tCB);
+	        	OperadorRed or = new OperadorRed(red.getZona(j), red.getZona(j).getCentroControl(), t, tcon, tCB, cdl);
 	        	Thread o = new Thread(or);
 	        	o.start();
 	        }
 	        // operadores de carga (1 por zona), recargan la batería
-	        OperadorCarga oc = new OperadorCarga(red.getZona(j));
+	        OperadorCarga oc = new OperadorCarga(red.getZona(j), cdl);
 	        Thread toc = new Thread(oc);
 	        toc.start();
 	        
@@ -187,6 +204,88 @@ public class MySmartGrid {
         	.filter(c->c.getDireccion().equals("Berna, 11"))
         	.findAny()
         	.ifPresent(c->System.out.println("Encontrado: " + c.getDireccion()));
+        
+        
+        // ---- VERSIÓN 9: Precios ----
+        ManagedChannel channel;
+    	PreciosStub pbs;
+    	Ventana v = new Ventana(20, 20, 300, 300, "CLIENTE");
+        
+        String target="localhost:9004";
+		channel = Grpc
+			.newChannelBuilder(target, InsecureChannelCredentials.create())
+			.build();
+		pbs = PreciosGrpc.newStub(channel);
+		
+		calcularPrecios(consumos, v, pbs);
+    }
+    
+    public static void calcularPrecios(List<Consumo> consumos, Ventana v, PreciosStub pbs) {
+    	v.traza("####### CALCULAR PRECIO #######\n");
+		
+		CountDownLatch finishLatch = new CountDownLatch(1);
+		
+		//Preparación de mi respuesta
+		StreamObserver<PreciosReply> streamResponse = new
+		StreamObserver<PreciosReply>() {
+			public void onCompleted() {
+				v.traza("Finished bidirectional Streaming \n");
+				finishLatch.countDown();
+			}
+			@Override
+			public void onError(Throwable t) {
+				v.traza("Error: "+ Status.fromThrowable(t)+"\n");
+				finishLatch.countDown();
+			}
+			@Override
+			public void onNext(PreciosReply value) {
+				v.traza("Id del consumo: " + value.getIdConsumo());
+				v.traza("Precio: " + value.getPrecio());
+			}};
+		
+			StreamObserver<PreciosRequest> preciosRequest =
+					pbs.calcularPrecios(streamResponse);
+		
+			// crear lista de demanda request
+			List<DemandaRequest> ListaDR = new ArrayList<>();
+			try {
+				for (Consumo c:consumos) {
+					PreciosRequest.Builder request = PreciosRequest.newBuilder()
+							.setIdConsumo(c.getIdConsumo())
+							.setIdZona(c.getZona());
+					// vaciar la lista
+					ListaDR.clear();
+					
+					for (Demanda d:c.getDemandas()) {
+						// añadir a la lista de demandas
+						DemandaRequest drequest = DemandaRequest.newBuilder()
+								.setIdTipo(d.getIdTipo())
+								.setKWh(d.getKWh())
+								.setPrioridad(d.getPrioridad())
+								.build();
+						ListaDR.add(drequest);
+
+						// añadimos las demandas
+						request.addDemandas(drequest);
+					}
+					// enviar al servicio
+					preciosRequest.onNext(request.build());
+					if (finishLatch.getCount() == 0) return;
+				}
+				preciosRequest.onCompleted();
+			} catch (RuntimeException e) {
+				preciosRequest.onError(e);
+				throw e;
+			}
+			
+			try {
+				if (!finishLatch.await(1, TimeUnit.MINUTES)) {
+					v.traza("bidirectional Streaming can not finish within 1 minute");
+				}
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
     }
     
 }

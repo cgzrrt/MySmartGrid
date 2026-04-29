@@ -25,12 +25,13 @@ public class OperadorRed implements Runnable {
 	private ManagedChannel channel;
 	private MonitorizacionBlockingStub blockingStub;
 	
-	public OperadorRed (ZonaEnergetica _zona, CentroControl _control, TodosOp _todos, TodosConsum _todCon, TodosCB _todosCB) {
+	public OperadorRed (ZonaEnergetica _zona, CentroControl _control, TodosOp _todos, TodosConsum _todCon, TodosCB _todosCB, EsperaOpCDL _cdl) {
 		zona = _zona;
 		control = _control;
 		todos = _todos;
 		todCon = _todCon;
 		todosCB = _todosCB;
+		cdl = _cdl;
 		
 		
 		// ---- VERSIÓN 9: Unary ----
@@ -45,7 +46,7 @@ public class OperadorRed implements Runnable {
 	@Override
 	public void run() {
 		
-		// cdl.operadorEjecutando(); // VERSIÓN 8
+		cdl.operadorEjecutando(); // VERSIÓN 8
 		
 		switch (Config.TIPO_TODOS) {
 		case 0:
@@ -57,10 +58,6 @@ public class OperadorRed implements Runnable {
 		}
 		
 		while (true) {
-			// System.out.println("--- OPERADOR DE ZONA " + zona.getIdZona());
-			
-			
-			
 			// coge trabajo
 			TrabajoConsumo tc = control.cogerTrabajo();
 			Double consum = tc.getConsumo().getTotalKWh();
@@ -74,13 +71,11 @@ public class OperadorRed implements Runnable {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-	       
-	        // double total = consum;
-	        // double suministrado = zona.getBateria().suministra(total);
 	        
 	        // ---- VERSIÓN 5: Identificar el tipo de demanda ----
 	        double suministrado = 0;
 	        double total = consum;
+	        boolean esSolar = false; // VERSIÓN 9
 	        for (int i = 0; i < tc.getConsumo().getDemandas().size(); i++) {
 	        	// System.out.println(tc.getConsumo().getDemandas().get(i).toString());
 		     	String d = tc.getConsumo().getDemandas().get(i).getIdTipo();
@@ -88,6 +83,7 @@ public class OperadorRed implements Runnable {
 	     		switch (d) {
 		     		case "SOLAR":
 		     			suministrado += zona.getBateriaSol().retirar(total);
+		     			esSolar = true;
 		     			// Traza.traza(ColoresConsola.YELLOW, 0, "** CONSUMO SOLAR **");
 		     		break;
 		     		case "EOLICA":
@@ -98,19 +94,21 @@ public class OperadorRed implements Runnable {
 		     			suministrado += zona.getBateria().suministra(total);
 		     			// Traza.traza(ColoresConsola.PURPLE, 0, "** CONSUMO RÁPIDO **");
 		     		break;
-		     	}
-	     		
-	     		// ---- VERSIÓN 9: Unary ----
-	     		System.out.println ("####### EJECUTAR ANOTAR CONSUMO #######\n");
-				ConsumoRequest consumoRequest =
-					ConsumoRequest.newBuilder().setDireccion(tc.getConsumo().getDireccion())
-						.setIdConsumo(tc.getConsumo().getIdConsumo())
-						.setIdZona(tc.getConsumo().getZona())
-						.setKWh(tc.getConsumo().getTotalKWh())
-						.setSolar(d.equals("SOLAR"))
-						.build();
-				ConsumoReply consumoReply = blockingStub.anotarConsumo(consumoRequest);
+		     	}	
 	     	}
+	        
+	        // ---- VERSIÓN 9: Unary ----
+     		System.out.println ("####### EJECUTAR ANOTAR CONSUMO #######\n");
+			ConsumoRequest consumoRequest =
+				ConsumoRequest.newBuilder().setDireccion(tc.getConsumo().getDireccion())
+					.setIdConsumo(tc.getConsumo().getIdConsumo())
+					.setIdZona(tc.getConsumo().getZona())
+					.setKWh(tc.getConsumo().getTotalKWh())
+					.setSolar(esSolar)
+					.build();
+			ConsumoReply consumoReply = blockingStub.anotarConsumo(consumoRequest);
+			System.out.println("**** ANOTAR CONSUMO: Total Zona: " + consumoReply.getTotalZona() + " Total Red: " + consumoReply.getTotalRed());
+			
 	     	// ---------------------------------------------------
 
 	        zona.getCuenta().anotaConsumo(suministrado);
@@ -136,18 +134,5 @@ public class OperadorRed implements Runnable {
 	public void traza(String msg) {
         System.out.println("[CentroControl Z" + zona.getIdZona() + "] " + msg);
     }
-	
-	
-	public void anotarConsumoCliente() {
-		
-//		HelloRequest helloRequest =
-//				HelloRequest.newBuilder().setName("Celia").build();
-//		System.out.println ("Sending to server: "+helloRequest.getName()+"\n");
-//		//Send request to Server
-//		HelloReply helloReply = greeterStubBlocking.sayHello(helloRequest);
-//		System.out.println(helloReply.getMessage());
-	}
-	
-	
 	
 }

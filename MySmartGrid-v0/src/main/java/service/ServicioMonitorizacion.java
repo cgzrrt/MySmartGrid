@@ -24,7 +24,7 @@ public class ServicioMonitorizacion extends MonitorizacionImplBase {
 	
 	// anotar consumo UNARY
 	public void anotarConsumo(ConsumoRequest request, StreamObserver<ConsumoReply> responseObserver) {
-		System.out.println("Request received from client: " + request);
+		// System.out.println("Request received from client: " + request);
 
 		// sumamos al total de la red
 		totalRed += request.getKWh();
@@ -50,7 +50,7 @@ public class ServicioMonitorizacion extends MonitorizacionImplBase {
 	}
 
 	
-	public void demandaSolar(DemandaRequest request, StreamObserver<DemandaReply> responseObserver) {
+	public synchronized void demandaSolar(DemandaRequest request, StreamObserver<DemandaReply> responseObserver) {
 		// recorremos la lista
 		for (ConsumoAnotado c:consumosAnotados) {
 			if (request.getIdZona() == c.getIdZona() && c.getSolar()) {
@@ -68,7 +68,7 @@ public class ServicioMonitorizacion extends MonitorizacionImplBase {
 			@Override
 			public void onNext(DireccionRequest value) {
 				for (ConsumoAnotado c:consumosAnotados) {
-					if (c.getDireccion().equals(value.getDireccion())) {
+					if (c.getDireccion().equals(value.getDireccion()) && c.getSolar()) {
 						totalSolar+=1;
 					}
 				}

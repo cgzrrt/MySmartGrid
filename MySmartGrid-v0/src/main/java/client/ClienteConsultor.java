@@ -45,19 +45,19 @@ public class ClienteConsultor  {
 		DemandaRequest demandaRequest =
 				DemandaRequest.newBuilder().setIdZona(2).build();
 		
-		v.traza ("REQUEST;"+ demandaRequest.getIdZona() +"\n");
+		// v.traza ("REQUEST;"+ demandaRequest.getIdZona() +"\n");
 		
 		try {
 			Iterator<DemandaReply>
 			demandaReply=monStubBlocking.demandaSolar(demandaRequest);
 			//Leer las respuestas recibidas en demandaReply por el servidor
 			while (demandaReply.hasNext())
-					System.out.print("RESPONSE:"+ demandaReply.next().getIdConsumo()+"\n");
+					v.traza("RESPONSE:"+ demandaReply.next().getIdConsumo()+"\n");
 		} catch (StatusRuntimeException e) {e.printStackTrace();}
 	}
 	
 	public static void executeConsumosDireccion() throws InterruptedException {
-		System.out.print("#######START EXAMPLE#######: ClientStreaming \n");
+		v.traza("#######START CONSUMO DIRECCION#######: ClientStreaming \n");
 		
 		//Declarar tiempo de espera
 		final CountDownLatch finishLatch = new CountDownLatch(1);
@@ -67,7 +67,7 @@ public class ClienteConsultor  {
 			public void onNext(DireccionReply value) {
 					// Leer y mostrar la respuesta del servidor
 					int respuesta= value.getTotal();
-					System.out.print("RESPONSE from the server: " + respuesta);
+					v.traza("Respuesta consumos Direccion: " + respuesta);
 			}
 			public void onError(Throwable t) {
 				System.out.print("Finished error \n");
@@ -88,7 +88,7 @@ public class ClienteConsultor  {
 				DireccionRequest dirRequest = DireccionRequest.newBuilder()
 						.setDireccion("Berna, 11").build();
 				requestObserver.onNext(dirRequest);
-			System.out.print("REQUEST:" + i + " desde Cliente\n");
+			// v.traza("DIRECCION:" + i + " desde Cliente\n");
 			}
 			requestObserver.onCompleted();
 		} catch (RuntimeException e) {
